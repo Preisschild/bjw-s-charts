@@ -20,6 +20,12 @@
             "description": "Controller this NetworkPolicy should target.",
             "type": "string"
           },
+          "type": {
+            "type": "string",
+            "enum": ["kubernetes", "cilium"],
+            "default": "kubernetes",
+            "description": "Type of NetworkPolicy. Supported values: kubernetes, cilium"
+          },
           "labels": { "$ref": "definitions.json#/labels" },
           "podSelector": {
             "description": "Custom podSelector for the NetworkPolicy. Takes precedence over targeting a controller."

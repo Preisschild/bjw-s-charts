@@ -806,10 +806,15 @@ networkpolicies:
   #   # -- Configure which controller this networkPolicy should target
   #   controller: main
 
+  #   # -- Configure which type of networkpolicy should be created
+  #   # Available: kubernetes, cilium. Defaults to kubernetes.
+  #   type: kubernetes
+
   #   # -- Define a custom podSelector for the networkPolicy. This takes precedence over targeting a controller.
   #   # podSelector: {}
 
   #   # -- The policyTypes for this networkPolicy
+  #   # Will only be set for kubernetes type.
   #   policyTypes:
   #     - Ingress
   #     - Egress

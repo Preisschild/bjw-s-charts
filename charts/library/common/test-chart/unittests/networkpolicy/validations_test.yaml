@@ -26,6 +26,17 @@ tests:
       - failedTemplate:
           errorMessage: "policyTypes is required for NetworkPolicy. (NetworkPolicy main)"
 
+  - it: policyTypes is required if type is explicitely kubernetes
+    set:
+      networkpolicies:
+        main:
+          controller: main
+          type: kubernetes
+          policyTypes: []
+    asserts:
+      - failedTemplate:
+          errorMessage: "policyTypes is required for NetworkPolicy. (NetworkPolicy main)"
+
   - it: policyTypes values check
     set:
       networkpolicies:

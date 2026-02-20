@@ -14,6 +14,7 @@ within the common library.
     ($networkPolicyObject.annotations | default dict)
     (include "bjw-s.common.lib.metadata.globalAnnotations" $rootContext | fromYaml)
   -}}
+  {{- $type := default "kubernetes" $networkPolicyObject.type -}}
   {{- $podSelector := dict -}}
   {{- if (hasKey $networkPolicyObject "podSelector") -}}
     {{- $podSelector = $networkPolicyObject.podSelector -}}
@@ -25,8 +26,13 @@ within the common library.
     ) -}}
   {{- end -}}
 ---
+{{- if eq $type "kubernetes" }}
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
+{{- else if eq $type "cilium" }}
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+{{- end }}
 metadata:
   name: {{ $networkPolicyObject.name }}
   {{- with $labels }}
@@ -43,9 +49,15 @@ metadata:
   {{- end }}
   namespace: {{ $rootContext.Release.Namespace }}
 spec:
+  {{- if eq $type "kubernetes" }}
   podSelector: {{- toYaml $podSelector | nindent 4 }}
+  {{- else if eq $type "cilium" }}
+  endpointSelector:  {{- toYaml $podSelector | nindent 4 }}
+  {{- end }}
+  {{- if eq $type "kubernetes" }}
   {{- with $networkPolicyObject.policyTypes }}
   policyTypes: {{- toYaml . | nindent 4 -}}
+  {{- end }}
   {{- end }}
   {{- with $networkPolicyObject.rules.ingress }}
   ingress: {{- tpl (toYaml .) $rootContext | nindent 4 -}}

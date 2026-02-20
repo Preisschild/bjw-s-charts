@@ -1,0 +1,78 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: networkPolicy - fields - type
+templates:
+  - common.yaml
+values:
+  - ../_values/controllers_main_default_container.yaml
+tests:
+  - it: networkpolicy type kubernetes creates NetworkPolicy
+    set:
+      networkpolicies:
+        main:
+          controller: main
+          type: kubernetes
+          policyTypes:
+            - Ingress
+            - Egress
+          rules:
+            ingress:
+              - {}
+            egress:
+              - {}
+    asserts:
+      - containsDocument:
+          apiVersion: networking.k8s.io/v1
+          kind: NetworkPolicy
+          name: release-name
+          any: true
+
+  - it: networkpolicy type cilium creates CiliumNetworkPolicy
+    set:
+      networkpolicies:
+        main:
+          controller: main
+          type: cilium
+          rules:
+            ingress:
+              - fromEndpoints:
+                - matchLabels:
+                    role: frontend
+            egress:
+              - toPorts:
+                  - ports:
+                      - port: "80"
+                        protocol: TCP
+    documentSelector:
+      path: $[?(@.kind == "CiliumNetworkPolicy")].metadata.name
+      value: release-name
+    asserts:
+      - equal:
+          path: spec.endpointSelector
+          value:
+            matchLabels:
+              app.kubernetes.io/controller: main
+              app.kubernetes.io/instance: RELEASE-NAME
+              app.kubernetes.io/name: RELEASE-NAME
+      - equal:
+          path: spec.ingress
+          value:
+            - fromEndpoints:
+              - matchLabels:
+                  role: frontend
+      - equal:
+          path: spec.egress
+          value:
+            - toPorts:
+                - ports:
+                    - port: "80"
+                      protocol: TCP
+  - it: networkpolicy type is invalid
+    set:
+      networkpolicies:
+        main:
+          controller: main
+          type: notexistant
+    asserts:
+      - failedTemplate:
+          errorPattern: "values don't meet the specifications of the schema"
